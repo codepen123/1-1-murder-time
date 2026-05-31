@@ -482,224 +482,118 @@ id="paper">
 
 </section>
 <script>
-const status =
-document.getElementById("status");
+const status = document.getElementById("status");
+const group = document.getElementById("group");
+const countdown = document.getElementById("countdown");
+const next = document.getElementById("next");
+const clock = document.getElementById("clock");
 
-const group =
-document.getElementById("group");
-
-const countdown =
-document.getElementById("countdown");
-
-const next =
-document.getElementById("next");
-
-const clock =
-document.getElementById("clock");
 const schedule = [
-
-["09:30","09:45","A"],
-["09:45","10:00","B"],
-["10:00","10:15","C"],
-["10:15","10:30","D"],
-["10:30","10:45","E"],
-["10:45","11:00","F"],
-["11:00","11:15","G"],
-["11:15","11:30","H"],
-["11:30","11:45","I"],
-["11:45","12:00","J"],
-["12:00","12:15","K"],
-["12:15","12:30","L"],
-
-["12:30","13:00","LUNCH"],
-
-["13:00","13:15","M"],
-["13:15","13:30","N"],
-["13:30","13:45","Ø"],
-["13:45","14:00","P"],
-["14:00","14:15","Q"],
-["14:15","14:30","R"],
-["14:30","14:45","S"],
-["14:45","15:00","T"],
-["15:00","15:15","U"],
-["15:15","15:30","V"]
-
+    ["09:30","09:45","A"],
+    ["09:45","10:00","B"],
+    ["10:00","10:15","C"],
+    ["10:15","10:30","D"],
+    ["10:30","10:45","E"],
+    ["10:45","11:00","F"],
+    ["11:00","11:15","G"],
+    ["11:15","11:30","H"],
+    ["11:30","11:45","I"],
+    ["11:45","12:00","J"],
+    ["12:00","12:15","K"],
+    ["12:15","12:30","L"],
+    ["12:30","13:00","LUNCH"],
+    ["13:00","13:15","M"],
+    ["13:15","13:30","N"],
+    ["13:30","13:45","Ø"],
+    ["13:45","14:00","P"],
+    ["14:00","14:15","Q"],
+    ["14:15","14:30","R"],
+    ["14:30","14:45","S"],
+    ["14:45","15:00","T"],
+    ["15:00","15:15","U"],
+    ["15:15","15:30","V"]
 ];
 
 function toMinutes(time){
-
-    const [h,m] =
-    time.split(":").map(Number);
-
+    const [h,m] = time.split(":").map(Number);
     return h * 60 + m;
 }
 
 function updateSchedule(){
-
     const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-    const currentMinutes =
-        now.getHours()*60 +
-        now.getMinutes();
-
-    const currentSeconds =
-        currentMinutes*60 +
-        now.getSeconds();
-
-    document
-        .getElementById("clock")
-        .innerText =
-        now.toLocaleTimeString("ja-JP");
+    document.getElementById("clock").innerText = now.toLocaleTimeString("ja-JP");
 
     let found = false;
+    const rows = document.querySelectorAll("table tr");
+    rows.forEach(row => row.classList.remove("current-row"));
 
-    const rows =
-        document.querySelectorAll("table tr");
+    for(let i=0; i<schedule.length; i++){
+        const start = toMinutes(schedule[i][0]);
+        const end = toMinutes(schedule[i][1]);
 
-    rows.forEach(row =>
-        row.classList.remove("current-row")
-    );
-
-    for(let i=0;i<schedule.length;i++){
-
-        const start =
-            toMinutes(schedule[i][0]);
-
-        const end =
-            toMinutes(schedule[i][1]);
-
-        if(
-            currentMinutes >= start &&
-            currentMinutes < end
-        ){
-
+        if(currentMinutes >= start && currentMinutes < end){
             found = true;
 
-            const remainSeconds =
-                end*60-currentSeconds;
+            // 残り時間の正確な計算
+            const endHour = Math.floor(end / 60);
+            const endMin = end % 60;
+            const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMin, 0);
+            const diffMs = endTime - now;
+            
+            const remainMinutes = Math.floor(diffMs / 1000 / 60);
+            const remainOnlySeconds = Math.floor((diffMs / 1000) % 60);
 
-            const remainMinutes =
-                Math.floor(
-                    remainSeconds / 60
-                );
-
-            const remainOnlySeconds =
-                remainSeconds % 60;
-
-            if(schedule[i][2]==="LUNCH"){
-
-                status.innerText =
-                    "🍱 昼休憩中";
-
-                group.innerText =
-                    "昼休憩";
-
-                countdown.innerText =
-                    `あと ${remainMinutes}分 ${remainOnlySeconds}秒`;
-
-                next.innerText =
-                    "次は M01〜M06";
-
-            }
-
-            else{
-
-                status.innerText =
-                    "🔴 現在公演中";
-
-                group.innerText =
-                    `${schedule[i][2]}01〜${schedule[i][2]}06`;
-
-                countdown.innerText =
-                    `あと ${remainMinutes}分 ${remainOnlySeconds}秒`;
+            if(schedule[i][2] === "LUNCH"){
+                status.innerText = "🍱 昼休憩中";
+                group.innerText = "昼休憩";
+                countdown.innerText = `あと ${remainMinutes}分 ${remainOnlySeconds}秒`;
+                next.innerText = "次は M01〜M06";
+            } else {
+                status.innerText = "🔴 現在公演中";
+                group.innerText = `${schedule[i][2]}01〜${schedule[i][2]}06`;
+                countdown.innerText = `あと ${remainMinutes}分 ${remainOnlySeconds}秒`;
 
                 if(i+1 < schedule.length){
-
-                    const nextGroup =
-                        schedule[i+1][2];
-
-                    if(nextGroup==="LUNCH"){
-
-                        next.innerText =
-                            "次は昼休憩";
-
+                    const nextGroup = schedule[i+1][2];
+                    if(nextGroup === "LUNCH"){
+                        next.innerText = "次は昼休憩";
+                    } else {
+                        next.innerText = `次は ${nextGroup}01〜${nextGroup}06`;
                     }
-
-                    else{
-
-                        next.innerText =
-                            `次は ${nextGroup}01〜${nextGroup}06`;
-
-                    }
-
                 }
-
             }
 
             if(rows[i+1]){
-
-                rows[i+1]
-                    .classList
-                    .add("current-row");
-
+                rows[i+1].classList.add("current-row");
             }
-
             break;
-
         }
-
     }
 
     if(!found){
-
-        status.innerText =
-            "現在公演は行っていません";
-
+        status.innerText = "現在公演は行っていません";
         group.innerText = "";
-
         countdown.innerText = "";
-
         next.innerText = "";
-
     }
-
 }
 
-setInterval(
-    updateSchedule,
-    1000
-);
-
+setInterval(updateSchedule, 1000);
 updateSchedule();
 
 /* 捜査資料めくり演出 */
+const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+        if(entry.isIntersecting){
+            entry.target.classList.add("show");
+        }
+    });
+}, { threshold: 0.25 });
 
-const observer =
-new IntersectionObserver(
+observer.observe(document.getElementById("paper"));
 
-(entries)=>{
-
-entries.forEach(entry=>{
-
-if(entry.isIntersecting){
-
-entry.target.classList.add("show");
-
-}
-
-});
-
-},
-
-{
-threshold:0.25
-}
-
-);
-
-observer.observe(
-document.getElementById("paper")
-);
 
 /* タイトル演出 */
 
